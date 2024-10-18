@@ -114,3 +114,7 @@ pip list
 python3 -m pip freeze > requirements.txt
 git remode add origin https://github.com/FlowersCS/visual-agnosia-simulation.git
 git remote add origin https://github.com/FlowersCS/visual-agnosia-simulation.git
+git add .
+git commint -m "Preparation and setup"
+git commit -m "Preparation and setup"
+git push -u origin master

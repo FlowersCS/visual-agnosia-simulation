@@ -1,5 +1,21 @@
-.kaggle
-.lightning_studio
+# Ignore edit config
+.idea/
+.vscode/
+
+# Ignore python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore virtual enviroments
+venv/
+.env/
+
+# Ignore my data
+.kaggle/
+.lightning_studio/
+.netrc
+
+# Ignote folders
 dataset/pictograms
 experiments/
-.netrc
