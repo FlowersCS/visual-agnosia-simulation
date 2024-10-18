@@ -1,0 +1,19 @@
+{
+    "model":{
+        "name": "vit",
+        "args": {
+            "in_channels": 3,
+            "num_classes": 16,
+            "lr": 3e-4,
+            "freeze": "False",
+            "pretrained": "True"
+        }
+    },
+    "dataset":{
+        "name": "Pictograms",
+        "img_size": 224,
+        "img_channels": 3,
+        "batch_size": 32,
+        "train_val_split": 0.8
+    }
+}
