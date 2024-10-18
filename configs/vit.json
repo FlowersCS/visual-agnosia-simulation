@@ -5,8 +5,8 @@
             "in_channels": 3,
             "num_classes": 16,
             "lr": 3e-4,
-            "freeze": "False",
-            "pretrained": "True"
+            "freeze": false,
+            "pretrained": true
         }
     },
     "dataset":{

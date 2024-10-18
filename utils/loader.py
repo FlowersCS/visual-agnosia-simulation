@@ -2,11 +2,6 @@ import json
 from importlib import import_module
 from typing import Dict
 
-MODELS = [
-    "ResNet50Model",
-    "ViTModel"
-]
-
 def load_model(model_config: Dict):
     model_name = model_config["name"]
     errors = []

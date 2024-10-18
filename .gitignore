@@ -15,6 +15,7 @@ venv/
 .kaggle/
 .lightning_studio/
 .netrc
+lightning_logs/
 
 # Ignote folders
 dataset/pictograms
