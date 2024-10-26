@@ -7,7 +7,7 @@ from torchvision import models
 
 class resnet50(pl.LightningModule):
     
-    def __init__(self, pretrained=True, in_channels=3, num_classes=16, lr=3e-4, freeze=False):
+    def __init__(self, pretrained=True, in_channels=3, num_classes=30, lr=3e-4, freeze=False):
         super(resnet50, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -86,3 +86,49 @@ class resnet50(pl.LightningModule):
         
         self.test_acc(torch.argmax(preds, dim=1), y)
         self.log('test_acc', self.test_acc, on_epoch=True)
+
+"""
+class resnet50Inference(pl.LightningModule):
+    
+    def __init__(self, pretrained=True):
+        super(resnet50Inference, self).__init__()
+        
+        self.model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=1000)
+    
+    def apply_pruning(self, prune_percentage, layer_type="initial"):
+        if prune_percentage > 0:
+            layers = [module for module in self.model.modules() if isinstance(module, nn.Conv2d)]
+            if layer_type == "initial":
+                # Podar la primera capa (o varias capas iniciales según sea necesario)
+                for i, layer in enumerate(layers[:1]):  # Cambia el 3 si quieres más capas
+                    prune.l1_unstructured(layer, name='weight', amount=prune_percentage)
+                    print(f"Podada capa inicial {i+1}, porcentaje {prune_percentage*100}%")
+            elif layer_type == "final":
+                # Podar la última capa (o varias capas finales)
+                for i, layer in enumerate(layers[-1:]):  # Cambia el 3 si quieres más capas
+                    prune.l1_unstructured(layer, name='weight', amount=prune_percentage)
+                    print(f"Podada capa final {i+1}, porcentaje {prune_percentage*100}%")  
+
+    def forward(self, x):
+        return self.model(x)
+    
+    def test_step(self, batch, batch_idx):
+        x, y = batch
+        preds = self.model(x)
+        
+        # Calcular accuracy en el conjunto de test
+        self.test_acc(torch.argmax(preds, dim=1), y)
+        self.log('test_acc', self.test_acc, on_epoch=True)
+    
+    def configure_optimizers(self):
+        # No optimizador ya que no estamos entrenando
+        pass
+
+    def on_test_start(self):
+        # Configurar el modelo en modo evaluación antes del testeo
+        self.model.eval()
+        # Desactivar gradientes para la inferencia
+        torch.set_grad_enabled(False)
+
+"""

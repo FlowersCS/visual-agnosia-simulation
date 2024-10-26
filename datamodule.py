@@ -9,67 +9,96 @@ from utils.path import DATASET_PATH
 from pathlib import Path
 from torchvision import datasets, transforms
 from typing import Optional, Union
-from torch import tensor
+from torch import Tensor
+from torchvision.io import read_image
 
-class PictogramDataset(Dataset):
-    def __init__(self, dataframe, transform=None):
-        self.dataframe = dataframe
+class CenterCropMinXY:
+    """
+    Custom transform that performs a center crop on the image in the smaller dimension (X or Y).
+    """
+
+    def __call__(self, image: Union[Tensor, any]) -> Tensor:
+        """
+        Perform the center crop on the image.
+
+        :param image: The input image as a torch.Tensor.
+        :return: The cropped image as a torch.Tensor.
+        """
+        if not isinstance(image, torch.Tensor):
+            raise TypeError('Input image should be a torch.Tensor')
+
+        # Get the height and width of the image
+        _, h, w = image.shape
+
+        # Determine the smaller dimension
+        min_dim = min(h, w)
+
+        # Calculate top and left coordinates for cropping
+        top = (h - min_dim) // 2
+        left = (w - min_dim) // 2
+
+        # Perform the crop
+        image = image[:, top: top + min_dim, left: left + min_dim]
+
+        return image
+
+class plantsDataset(Dataset):
+    def __init__(self, annotations_file, img_dir, transform=None):
+        self.img_labels = pd.read_csv(annotations_file, header=0)
+        self.img_dir = img_dir
         self.transform = transform
-
+    
     def __len__(self):
-        return len(self.dataframe)
+        return len(self.img_labels)
     
     def __getitem__(self, idx):
-        image_path = self.dataframe.iloc[idx,0]
-        image = Image.open(image_path).convert('RGB')
-        manner = self.dataframe.iloc[idx,1]
-        obj = self.dataframe.iloc[idx,2]
-
+        img_path = os.path.join(self.img_dir, self.img_labels.iloc[idx, 0])
+        image = read_image(img_path)
+        label = int(self.img_labels.iloc[idx, 1])
         if self.transform:
             image = self.transform(image)
-        
-        return image, tensor(int(obj))#(manner, obj)
-
+        return image, label
 
 class DataModule(pl.LightningDataModule):
     def __init__(
         self,
-        name: str,
         img_size: int,
         img_channels: int,
         data_dir: Union[str, Path] = DATASET_PATH,
         batch_size: int = 32,
         num_workers: int = 0,
-        train_val_split: float = 0.8,
-        download: bool = True,
         pin_memory: bool = True,
+        persistent_workers: bool = True,
+        train_val_split: float= 0.8,
     ):
         super().__init__()
-        self.name = str(name)
         self.img_size = img_size
         self.img_channels = img_channels
-        self.data_dir = data_dir
+        self.data_dir = Path(data_dir)
         self.batch_size = int(batch_size / (torch.cuda.device_count() if torch.cuda.device_count() > 1 else 1))
         self.num_workers = num_workers
-        self.train_val_split = train_val_split
-        self.download = download
         self.pin_memory = pin_memory
-        self.df = None
+        self.persistent_workers = persistent_workers
+        self.train_val_split = train_val_split
 
         self.transforms = {
             "train": transforms.Compose(
                 [
+                    transforms.ToPILImage(),
                     transforms.Resize((self.img_size,self.img_size)),
+                    #transforms.RandomHorizontalFlip(1),
+                    #transforms.RandomRotation(180),
                     transforms.ToTensor(),
+                    CenterCropMinXY(),
                     transforms.Normalize(
                         [0.5] * self.img_channels,
                         [0.5] * self.img_channels,
                     ),
-                    #CenterCropMinXY(),
                 ]
             ),
             "val": transforms.Compose(
                 [
+                    transforms.ToPILImage(),
                     transforms.Resize((self.img_size,self.img_size)),
                     transforms.ToTensor(),
                     transforms.Normalize(
@@ -77,11 +106,11 @@ class DataModule(pl.LightningDataModule):
                         [0.5] * self.img_channels,
                     ),
                     #CenterCropMinXY(),
-                    
                 ]
             ),
             "test": transforms.Compose(
                 [
+                    transforms.ToPILImage(),
                     transforms.Resize((self.img_size,self.img_size)),
                     transforms.ToTensor(),
                     transforms.Normalize(
@@ -89,81 +118,34 @@ class DataModule(pl.LightningDataModule):
                         [0.5] * self.img_channels,
                     ),
                     #CenterCropMinXY(),
-                    
                 ]
             ),
         }
+
     
-    def prepare_data(self) -> None:
-        if self.name == 'Pictograms':
-            images = []
-            manners = []
-            objects = []
+    #def prepare_data(self) -> None:
 
-            for root, dirs, files in os.walk(self.data_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    
-                    if not file.lower().endswith('.png'):
-                        print(f"Ignorando archivo no válido: {file_path}")
-                        continue
-
-                    manner = file[:2]
-                    obj = file[3:6]
-
-                    images.append(file_path)
-                    manners.append(manner)
-                    objects.append(obj)
-
-            if images:
-                self.df = pd.DataFrame({
-                    'imagen': images,
-                    'manner': manners,
-                    'object': objects
-                })
-
-                print(f"Total imágenes en el dataset: {len(self.df)}")
-            
-                # Mapping labels to number value
-                manner_map = {
-                    '01': 'pictogram',
-                    '02': 'contour',
-                    '03': 'sketch'
-                }
-
-                #object_map = {
-                #    '001': 'flower', '002': 'bird', '003': 'butterfly', '004': 'tree',
-                #    '005': 'plane', '006': 'crane', '007': 'dog', '008': 'horse',
-                #    '009': 'deer', '010': 'truck', '011': 'car', '012': 'cat',
-                #    '013': 'frog', '014': 'ship', '015': 'fish', '016': 'house'
-                #}
-                object_map = {
-                '001': 0, '002': 1, '003': 2, '004': 3, '005': 4, '006': 5, '007': 6, '008': 7,
-                '009': 8, '010': 9, '011': 10, '012': 11, '013': 12, '014': 13, '015': 14, '016': 15
-                }
-
-                self.df['manner'] = self.df['manner'].replace(manner_map)
-                self.df['object'] = self.df['object'].replace(object_map)
-            
-            else:
-                print("No se encontraron imágenes válidas en el directorio.")
-    
     def setup(self, stage: Optional[str] = None) -> None:
-        if self.name == 'Pictograms':
-            if self.df is None:
-                raise ValueError("DataFrame no inicializado. Asegúrate de que prepare_data() se haya llamado.")
-            # Crear el dataset
-            full_dataset = PictogramDataset(self.df, transform=self.transforms['train'])
+        train_file = self.data_dir / "train.csv"
+        val_file = self.data_dir / "val.csv"
+        test_file = self.data_dir / "test.csv"
 
-            # Dividir en entrenamiento y validación
-            num_train = int(len(full_dataset) * self.train_val_split)
-            num_val = len(full_dataset) - num_train
-            self.train_dataset, self.val_dataset = random_split(full_dataset, [num_train, num_val])
-            print(f"Tamaño del conjunto de entrenamiento: {len(self.train_dataset)}")
-            print(f"Tamaño del conjunto de validación: {len(self.val_dataset)}")
-            # Test dataset (puedes ajustar según tus necesidades)
-            self.test_dataset = PictogramDataset(self.df, transform=self.transforms['test'])
-            print(f"Tamaño del conjunto de prueba: {len(self.test_dataset)}")
+        # Inicializar datasets
+        self.train_dataset = plantsDataset(
+            annotations_file=train_file,
+            img_dir=self.data_dir,
+            transform=self.transforms["train"],
+        )
+        self.val_dataset = plantsDataset(
+            annotations_file=val_file,
+            img_dir=self.data_dir,
+            transform=self.transforms["val"],
+        )
+        self.test_dataset = plantsDataset(
+            annotations_file=test_file,
+            img_dir=self.data_dir,
+            transform=self.transforms["test"],
+        )
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -171,7 +153,8 @@ class DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
-            shuffle=True
+            persistent_workers=self.persistent_workers,
+            shuffle=True,
         )
 
     def val_dataloader(self) -> DataLoader:
@@ -180,6 +163,7 @@ class DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
         )
 
     def test_dataloader(self) -> DataLoader:
@@ -188,5 +172,5 @@ class DataModule(pl.LightningDataModule):
             batch_size=self.batch_size,
             num_workers=self.num_workers,
             pin_memory=self.pin_memory,
+            persistent_workers=self.persistent_workers,
         )
-    

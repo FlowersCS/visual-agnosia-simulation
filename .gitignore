@@ -16,6 +16,8 @@ venv/
 .lightning_studio/
 .netrc
 lightning_logs/
+dataset/
+*.zip
 
 # Ignote folders
 dataset/pictograms
