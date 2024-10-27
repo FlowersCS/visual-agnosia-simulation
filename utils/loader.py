@@ -10,7 +10,20 @@ def load_model(model_config: Dict):
         module_path = f"models.{model_name.lower()}"
         module = import_module(module_path)
         model_class = getattr(module, model_name)
-        return model_class(**model_config["args"])
+        
+        # Extraer y separar la configuración de poda
+        model_args = model_config["args"].copy()  # Copia de los argumentos del modelo
+        #pruning_params = model_args.pop("pruning", None)  # Extrae "pruning" si existe
+        
+        # Crear instancia del modelo con los argumentos restantes
+        model = model_class(**model_args)
+        
+        # Aplicar poda si está configurada y habilitada
+        #if pruning_params and pruning_params.get("enabled", False):
+        #    print(f"Applying pruning with {pruning_params['amount']} on {pruning_params['layers']} layers.")
+        #    model.apply_pruning(amount=pruning_params["amount"], layers=pruning_params["layers"])
+        
+        return model
             
     except ImportError as e:
         errors.append(str(e))

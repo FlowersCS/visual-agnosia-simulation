@@ -225,3 +225,50 @@ python3 train.py --config_path configs/resnet50.json --experiment_name resnet50t
 python3 train.py --config_path configs/resnet50.json --experiment_name resnet50test2_plants --max_epochs 50
 python3 train.py --config_path configs/resnet50.json --experiment_name resnet50test3_plants --max_epochs 50
 python3 train.py --config_path configs/resnet50.json --experiment_name resnet50test4_plants --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50test5_plants --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_initial --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_initial --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_initial --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_initial --max_epochs 50
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_v2_initial --max_epochs 50
+clear
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_v3_initial --max_epochs 5
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_70%_v3_final --max_epochs 5
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_v2_initial --max_epochs 5
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_20%_v3_initial --max_epochs 5
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_50%_initial --max_epochs 5
+python3 train.py --config_path configs/resnet50.json --experiment_name resnet50_50%_final --max_epochs 5
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial --experiment_name testresnet20%
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial --experiment_name testresnet20%
+clear
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial --experiment_name testresnet20%
+clear
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial --experiment_name testresnet20%
+python3 train.py --config_path configs/resnet50.json --max_epochs 10 --experiment_name resnet50_0% 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune initial --experiment_name resnet50_20%_initial --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.3 --layers_to_prune initial --experiment_name resnet50_30%_initial --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.5 --layers_to_prune initial --experiment_name resnet50_50%_initial --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.7 --layers_to_prune initial --experiment_name resnet50_70%_initial --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune final --experiment_name resnet50_20%_final --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.2 --layers_to_prune final --experiment_name resnet50_20%_final --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.3 --layers_to_prune final --experiment_name resnet50_30%_final --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.5 --layers_to_prune final --experiment_name resnet50_50%_final --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.7 --layers_to_prune final --experiment_name resnet50_70%_final --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune initial --experiment_name resnet50_0%_test_2 --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt 
+clear
+chmod +x run_test.sh 
+clear

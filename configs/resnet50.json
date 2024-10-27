@@ -4,15 +4,20 @@
         "args": {
             "in_channels": 3,
             "num_classes": 30,
-            "lr": 1e-3,
-            "freeze": false,
-            "pretrained": true
+            "lr": 1e-4,
+            "freeze": true,
+            "pretrained": true,
+            "pruning": {
+                "enabled": false,
+                "amount": 0.2,
+                "layers": "initial"
+            }
         }
     },
     "dataset":{
         "img_size": 224,
         "img_channels": 3,
-        "batch_size": 64,
+        "batch_size": 128,
         "train_val_split": 0.8
     }
 }

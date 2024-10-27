@@ -4,10 +4,11 @@ import torch.optim as optim
 import torchmetrics
 import pytorch_lightning as pl
 from torchvision import models
+import torch.nn.utils.prune as prune
 
 class resnet50(pl.LightningModule):
     
-    def __init__(self, pretrained=True, in_channels=3, num_classes=30, lr=3e-4, freeze=False):
+    def __init__(self, pretrained=True, in_channels=3, num_classes=30, lr=3e-4, freeze=False, pruning=None):
         super(resnet50, self).__init__()
         self.in_channels = in_channels
         self.num_classes = num_classes
@@ -27,6 +28,10 @@ class resnet50(pl.LightningModule):
         
         self.model.fc = nn.Linear(self.model.fc.in_features, self.num_classes)
         
+        ## Aplicar poda si está configurada
+        #if pruning and pruning.get("enabled", False):
+        #    self.apply_pruning(amount=pruning["amount"], layers=pruning["layers"])
+
         # Cambiar la capa fc de ResNet para ajustarse a 128 características intermedias
         #self.model.fc = nn.Linear(self.model.fc.in_features, 128)
         
@@ -44,8 +49,26 @@ class resnet50(pl.LightningModule):
         self.train_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.val_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
         self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=num_classes)
-        
-        
+    
+    def apply_pruning(self, amount, layers='initial'):
+        print(f"Applying pruning with amount={amount} on {layers} layers.")
+        if layers == "initial":
+            # Podar los primeros 3 bloques residuales (capas iniciales)
+            for name, module in list(self.model.named_modules())[:32]:  # Ajusta el rango de acuerdo a los bloques iniciales
+                if isinstance(module, nn.Conv2d):
+                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                    print(f"Pruned {name} with {amount*100}% of weights removed.")
+        elif layers == 'final':
+            # Podar las capas finales (últimos módulos)
+            for name, module in list(self.model.named_modules())[-32:]:  # Ajusta el rango de acuerdo a los bloques finales
+                if isinstance(module, nn.Conv2d):
+                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                    print(f"Pruned {name} with {amount*100}% of weights removed.")
+                    
+        for name, module in self.model.named_modules():
+            if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+                prune.remove(module, 'weight')
+
     def forward(self, x):
         #x = self.model(x)
         #x = self.fc(x)

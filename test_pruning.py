@@ -1,4 +1,4 @@
-# main.py
+# test_pruning.py
 import pytorch_lightning as pl
 import argparse
 import os
@@ -8,7 +8,6 @@ from datetime import datetime
 from pprint import pprint
 from pathlib import Path
 
-
 from pytorch_lightning import Trainer
 from models.resnet50 import resnet50
 from models.vit import vit
@@ -17,23 +16,21 @@ from utils.seed import seed_everything
 from utils.lightning_utils import configure_num_workers, configure_strategy
 from utils.loader import load_config, load_model
 from utils.path import EXPERIMENT_DIR
-from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger
-from utils.callbacks import LogArtifactCallback
-
+import torch.nn.utils.prune as prune
+import torch.nn as nn
 
 seed_everything(seed=10, workers=True)
 EXPERIMENT_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M")
 
 def setup_arguments(print_args: bool = True, save_args: bool = True):
-    parser = argparse.ArgumentParser("Train script")
+    parser = argparse.ArgumentParser("Test script with pruning")
     
     parser.add_argument("--config_path", type=str, required=True, help="Path to configs")
     parser.add_argument("--num_workers", type=int, default=configure_num_workers())
-    parser.add_argument("--max_epochs", type=int, default=-1)
-    parser.add_argument("--max_steps", type=int, default=-1)
+    parser.add_argument("--pruning_amount", type=float, required=True, help="Amount of weights to prune (e.g., 0.2 for 20%)")
+    parser.add_argument("--layers_to_prune", type=str, choices=["initial", "final"], required=True, help="Layers to prune")
     parser.add_argument("--strategy", type=str, default=configure_strategy())
-    parser.add_argument("--accumulate_grad_batches", type=int, default=1)
     parser.add_argument("--precision", type=str, default=None)
     parser.add_argument("--ckpt_path", type=str, default=None)
 
@@ -82,17 +79,32 @@ def setup_arguments(print_args: bool = True, save_args: bool = True):
     
     return args
 
+def apply_pruning(model, amount, layers):
+    print(f"Applying pruning with amount={amount} on {layers} layers.")
+    if layers == "initial":
+        for name, module in list(model.model.named_modules())[:32]:  # Ajusta a las capas iniciales
+            if isinstance(module, nn.Conv2d):
+                prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                print(f"Pruned {name} with {amount * 100}% of weights removed.")
+    elif layers == "final":
+        for name, module in list(model.model.named_modules())[-32:]:  # Ajusta a las capas finales
+            if isinstance(module, nn.Conv2d):
+                prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                print(f"Pruned {name} with {amount * 100}% of weights removed.")
+    for name, module in model.model.named_modules():
+        if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+            prune.remove(module, 'weight')
+
 if __name__ == "__main__":
     args = setup_arguments(print_args=True, save_args=True)
 
+    # Cargar el modelo sin poda
     model = load_model(args.config["model"])
 
-    if "pruning" in args.config["model"]["args"]:
-        pruning_params = args.config["model"]["args"]["pruning"]
-        if pruning_params.get("enabled", False):
-            print(f"Applying pruning with {pruning_params['amount']} on {pruning_params['layers']} layers.")
-            model.apply_pruning(amount=pruning_params["amount"], layers=pruning_params["layers"])
+    # Aplicar la poda solo en el conjunto de test
+    apply_pruning(model, amount=args.pruning_amount, layers=args.layers_to_prune)
 
+    # Configurar el DataModule solo para el conjunto de test
     datamodule = DataModule(
         **args.config["dataset"],
         num_workers=args.num_workers,
@@ -108,60 +120,12 @@ if __name__ == "__main__":
         id=args.id if args.resume else None,
     )
 
-    callbacks = [
-        ModelCheckpoint(
-            dirpath=args.experiment_dir,
-            save_last=True,
-            monitor= "val_acc",
-        ),
-        LogArtifactCallback(
-            file_path=os.path.join(args.experiment_dir, Path(args.config_path).name),
-        )
-    ]
-
     trainer = pl.Trainer(
-        max_epochs=args.max_epochs,
-        max_steps=args.max_steps,
-        default_root_dir=args.experiment_dir,
-        strategy=args.strategy,
-        accumulate_grad_batches=args.accumulate_grad_batches,
         logger=wandb_logger,
-        callbacks=callbacks,
+        strategy=args.strategy,
         precision=args.precision,
         deterministic=True,
     )
 
-    trainer.fit(
-        model,
-        datamodule=datamodule,
-        ckpt_path=args.ckpt_path
-    )
-
-"""
-# MEJORAS RESNET50
-- Frezze: False
-- Capa final, resnet50. Adicionar capas fc
-- Data augmentation en datamodule
-- Regularizacion: drouput -> 0.4,0.5 si el modelo se ajuste demasiado rápido en el training
-
-# MEJORAS VIT
-- Freeze: False
-- Batch mayor: batch_size -> 64, transformers tienden a funcionar mejor con batches grandes
-- Optimizacion: AdamW -> Adam, LAMB
-- img_size: 224x224 es el standar pero si se puede 384x384
-- capa de normalizacion y preprocesamiento: Verifica que las imágenes se normalicen correctamente para adaptarse a la distribución del preentrenamiento de ViT (IMAGENET1K_V1).
-    Asegúrate de que las transformaciones y normalización estén alineadas con el modelo preentrenado que estás usando.
-- dificiles lr, funciona mejor cosine Annealing.
-
-# GENERALES
-- 3e-4 -> 1e-4
-- Data augmentation
-- batch size
-
-# steps
-- freeze
-- lr y batch size
-- capas fc en restnet50
-- data augmentation in datamodule
-- scheduler de tipo cosine annealing en ViT
-"""
+    # Realizar inferencia en el conjunto de test con la poda aplicada
+    trainer.test(model, datamodule=datamodule)

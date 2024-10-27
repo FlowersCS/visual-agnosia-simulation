@@ -100,24 +100,29 @@ class DataModule(pl.LightningDataModule):
                 [
                     transforms.ToPILImage(),
                     transforms.Resize((self.img_size,self.img_size)),
+                    #transforms.RandomHorizontalFlip(1),
+                    #transforms.RandomRotation(180),
                     transforms.ToTensor(),
+                    CenterCropMinXY(),
                     transforms.Normalize(
                         [0.5] * self.img_channels,
                         [0.5] * self.img_channels,
                     ),
-                    #CenterCropMinXY(),
                 ]
             ),
             "test": transforms.Compose(
                 [
                     transforms.ToPILImage(),
+                    transforms.Lambda(lambda img: img.convert("RGB")),
                     transforms.Resize((self.img_size,self.img_size)),
+                    #transforms.RandomHorizontalFlip(1),
+                    #transforms.RandomRotation(180),
                     transforms.ToTensor(),
+                    CenterCropMinXY(),
                     transforms.Normalize(
                         [0.5] * self.img_channels,
                         [0.5] * self.img_channels,
                     ),
-                    #CenterCropMinXY(),
                 ]
             ),
         }
