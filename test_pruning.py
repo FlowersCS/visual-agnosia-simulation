@@ -19,6 +19,7 @@ from utils.path import EXPERIMENT_DIR
 from pytorch_lightning.loggers import WandbLogger
 import torch.nn.utils.prune as prune
 import torch.nn as nn
+import torch
 
 seed_everything(seed=10, workers=True)
 EXPERIMENT_TIME = datetime.now().strftime("%Y-%m-%d_%H:%M")
@@ -81,28 +82,34 @@ def setup_arguments(print_args: bool = True, save_args: bool = True):
 
 def apply_pruning(model, amount, layers):
     print(f"Applying pruning with amount={amount} on {layers} layers.")
-    if layers == "initial":
-        for name, module in list(model.model.named_modules())[:32]:  # Ajusta a las capas iniciales
-            if isinstance(module, nn.Conv2d):
-                prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
-                print(f"Pruned {name} with {amount * 100}% of weights removed.")
-    elif layers == "final":
-        for name, module in list(model.model.named_modules())[-32:]:  # Ajusta a las capas finales
-            if isinstance(module, nn.Conv2d):
-                prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
-                print(f"Pruned {name} with {amount * 100}% of weights removed.")
-    for name, module in model.model.named_modules():
-        if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
-            prune.remove(module, 'weight')
+    if amount > 0:  # Only apply pruning if amount is greater than 0
+        if layers == "initial":
+            for name, module in list(model.model.named_modules())[:32]:  # Ajusta a las capas iniciales
+                if isinstance(module, nn.Conv2d):
+                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                    print(f"Pruned {name} with {amount * 100}% of weights removed.")
+        elif layers == "final":
+            for name, module in list(model.model.named_modules())[-32:]:  # Ajusta a las capas finales
+                if isinstance(module, nn.Conv2d):
+                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+                    print(f"Pruned {name} with {amount * 100}% of weights removed.")
+        for name, module in model.model.named_modules():
+            if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+                prune.remove(module, 'weight')
 
 if __name__ == "__main__":
     args = setup_arguments(print_args=True, save_args=True)
 
-    # Cargar el modelo sin poda
+    # Cargar el modelo desde el checkpoint especificado
     model = load_model(args.config["model"])
+    if args.ckpt_path:
+        print(f"Loading checkpoint from {args.ckpt_path}")
+        checkpoint = torch.load(args.ckpt_path, map_location="cuda" if torch.cuda.is_available() else "cpu")
+        model.load_state_dict(checkpoint["state_dict"])
 
-    # Aplicar la poda solo en el conjunto de test
-    apply_pruning(model, amount=args.pruning_amount, layers=args.layers_to_prune)
+    # No aplicar poda si `pruning_amount` es 0
+    if args.pruning_amount > 0:
+        apply_pruning(model, amount=args.pruning_amount, layers=args.layers_to_prune)
 
     # Configurar el DataModule solo para el conjunto de test
     datamodule = DataModule(
@@ -128,4 +135,5 @@ if __name__ == "__main__":
     )
 
     # Realizar inferencia en el conjunto de test con la poda aplicada
+    #print(f"Number of samples in test dataset: {len(datamodule.test_dataloader().dataset)}")
     trainer.test(model, datamodule=datamodule)

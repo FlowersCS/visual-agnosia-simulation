@@ -272,3 +272,38 @@ python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0
 clear
 chmod +x run_test.sh 
 clear
+python3 train.py --config_path configs/resnet50.json --max_epochs 10 --experiment_name resnet50_0%_v2
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune initial --experiment_name resnet50_0%_test_2 --ckpt_path experiments/resnet50/resnet50_0%_v2/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_2 --ckpt_path experiments/resnet50/resnet50_0%_v2/last.ckpt
+python3 train.py --config_path configs/resnet50.json --max_epochs 10 --experiment_name resnet50_0%_v3
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_3 --ckpt_path experiments/resnet50/resnet50_0%_v3/last.ckpt
+python3 train.py --config_path configs/resnet50.json --max_epochs 10 --experiment_name resnet50_0%_v4
+clear
+python3 train.py --config_path configs/resnet50.json --max_epochs 10 --experiment_name resnet50_0%_v5
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_5 --ckpt_path experiments/resnet50/resnet50_0%_v5/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_5 --ckpt_path experiments/resnet50/resnet50_0%_v5/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_3 --ckpt_path experiments/resnet50/resnet50_0%_v3/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_5 --ckpt_path experiments/resnet50/resnet50_0%_v5/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_3 --ckpt_path experiments/resnet50/resnet50_0%_v3/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_3 --ckpt_path experiments/resnet50/resnet50_0%_v3/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_4 --ckpt_path experiments/resnet50/resnet50_0%_v4/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_2 --ckpt_path experiments/resnet50/resnet50_0%_v2/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_1 --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_test_5 --ckpt_path experiments/resnet50/resnet50_0%_v5/last.ckpt
+clear
+./run_test.sh 
+clear
+./run_test.sh 
+clear
+./run_test.sh 
+sudo apt-get install bc
+clear
+./run_test.sh 
+clear
+./run_test.sh 
+clear
+./run_test.sh 
+./run_test.sh 
+clear
+./run_test.sh 
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune final --experiment_name resnet50_0%_initial --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt

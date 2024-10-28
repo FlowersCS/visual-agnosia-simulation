@@ -4,7 +4,7 @@
         "args": {
             "in_channels": 3,
             "num_classes": 30,
-            "lr": 1e-4,
+            "lr": 3e-4,
             "freeze": true,
             "pretrained": true,
             "pruning": {
@@ -17,7 +17,7 @@
     "dataset":{
         "img_size": 224,
         "img_channels": 3,
-        "batch_size": 128,
+        "batch_size": 64,
         "train_val_split": 0.8
     }
 }

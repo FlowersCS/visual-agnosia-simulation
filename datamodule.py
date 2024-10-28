@@ -85,9 +85,14 @@ class DataModule(pl.LightningDataModule):
             "train": transforms.Compose(
                 [
                     transforms.ToPILImage(),
-                    transforms.Resize((self.img_size,self.img_size)),
-                    #transforms.RandomHorizontalFlip(1),
-                    #transforms.RandomRotation(180),
+                    transforms.Resize((self.img_size, self.img_size)),
+                    transforms.RandomHorizontalFlip(p=0.5),       # Volteo horizontal aleatorio con probabilidad 50%
+                    transforms.RandomRotation(degrees=20),        # Rotación aleatoria hasta 20 grados
+                    transforms.ColorJitter(brightness=0.2,        # Cambio aleatorio de brillo, saturación y contraste
+                                        contrast=0.2,
+                                        saturation=0.2),
+                    transforms.RandomResizedCrop(size=(self.img_size, self.img_size), 
+                                                scale=(0.8, 1.0)), # Recorte aleatorio con 80%-100% del área
                     transforms.ToTensor(),
                     CenterCropMinXY(),
                     transforms.Normalize(
@@ -100,8 +105,6 @@ class DataModule(pl.LightningDataModule):
                 [
                     transforms.ToPILImage(),
                     transforms.Resize((self.img_size,self.img_size)),
-                    #transforms.RandomHorizontalFlip(1),
-                    #transforms.RandomRotation(180),
                     transforms.ToTensor(),
                     CenterCropMinXY(),
                     transforms.Normalize(
@@ -115,8 +118,6 @@ class DataModule(pl.LightningDataModule):
                     transforms.ToPILImage(),
                     transforms.Lambda(lambda img: img.convert("RGB")),
                     transforms.Resize((self.img_size,self.img_size)),
-                    #transforms.RandomHorizontalFlip(1),
-                    #transforms.RandomRotation(180),
                     transforms.ToTensor(),
                     CenterCropMinXY(),
                     transforms.Normalize(
