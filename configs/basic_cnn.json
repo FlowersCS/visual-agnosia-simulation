@@ -1,15 +1,13 @@
 {
     "model": {
-        "name": "vit",
+        "name": "BasicCNN",
         "args": {
             "in_channels": 3,
-            "num_classes": 30,           
             "lr": 3e-4,
-            "freeze": false,               
-            "pretrained": true,
+            "num_classes": 30,
             "pruning": {
-                "enabled": false,
                 "amount": 0.2,
+                "enabled": false,
                 "layers": "initial"
             }
         }
@@ -17,7 +15,7 @@
     "dataset": {
         "img_size": 224,
         "img_channels": 3,
-        "batch_size": 64,              
+        "batch_size": 16,
         "train_val_split": 0.8
     }
 }

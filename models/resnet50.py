@@ -14,7 +14,6 @@ class resnet50(pl.LightningModule):
         self.num_classes = num_classes
         self.lr = lr
         
-        
         if pretrained:
             self.model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
         else:
@@ -27,20 +26,7 @@ class resnet50(pl.LightningModule):
                 param.requires_grad = False
         
         self.model.fc = nn.Linear(self.model.fc.in_features, self.num_classes)
-        
-        ## Aplicar poda si está configurada
-        #if pruning and pruning.get("enabled", False):
-        #    self.apply_pruning(amount=pruning["amount"], layers=pruning["layers"])
 
-        # Cambiar la capa fc de ResNet para ajustarse a 128 características intermedias
-        #self.model.fc = nn.Linear(self.model.fc.in_features, 128)
-        
-        # Añadir más capas después de la capa fc original
-        #self.fc = nn.Sequential(
-        #    nn.Dropout(0.3),
-        #    nn.Linear(128, self.num_classes)
-        #)
-        
         
         # Función de pérdida
         self.loss_fn = nn.CrossEntropyLoss()
@@ -70,8 +56,6 @@ class resnet50(pl.LightningModule):
                 prune.remove(module, 'weight')
 
     def forward(self, x):
-        #x = self.model(x)
-        #x = self.fc(x)
         return self.model(x)
     
     
@@ -109,49 +93,3 @@ class resnet50(pl.LightningModule):
         
         self.test_acc(torch.argmax(preds, dim=1), y)
         self.log('test_acc', self.test_acc, on_epoch=True)
-
-"""
-class resnet50Inference(pl.LightningModule):
-    
-    def __init__(self, pretrained=True):
-        super(resnet50Inference, self).__init__()
-        
-        self.model = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
-        self.test_acc = torchmetrics.Accuracy(task="multiclass", num_classes=1000)
-    
-    def apply_pruning(self, prune_percentage, layer_type="initial"):
-        if prune_percentage > 0:
-            layers = [module for module in self.model.modules() if isinstance(module, nn.Conv2d)]
-            if layer_type == "initial":
-                # Podar la primera capa (o varias capas iniciales según sea necesario)
-                for i, layer in enumerate(layers[:1]):  # Cambia el 3 si quieres más capas
-                    prune.l1_unstructured(layer, name='weight', amount=prune_percentage)
-                    print(f"Podada capa inicial {i+1}, porcentaje {prune_percentage*100}%")
-            elif layer_type == "final":
-                # Podar la última capa (o varias capas finales)
-                for i, layer in enumerate(layers[-1:]):  # Cambia el 3 si quieres más capas
-                    prune.l1_unstructured(layer, name='weight', amount=prune_percentage)
-                    print(f"Podada capa final {i+1}, porcentaje {prune_percentage*100}%")  
-
-    def forward(self, x):
-        return self.model(x)
-    
-    def test_step(self, batch, batch_idx):
-        x, y = batch
-        preds = self.model(x)
-        
-        # Calcular accuracy en el conjunto de test
-        self.test_acc(torch.argmax(preds, dim=1), y)
-        self.log('test_acc', self.test_acc, on_epoch=True)
-    
-    def configure_optimizers(self):
-        # No optimizador ya que no estamos entrenando
-        pass
-
-    def on_test_start(self):
-        # Configurar el modelo en modo evaluación antes del testeo
-        self.model.eval()
-        # Desactivar gradientes para la inferencia
-        torch.set_grad_enabled(False)
-
-"""

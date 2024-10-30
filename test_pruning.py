@@ -80,22 +80,74 @@ def setup_arguments(print_args: bool = True, save_args: bool = True):
     
     return args
 
+#def apply_pruning(model, amount, layers):
+#    print(f"Applying pruning with amount={amount} on {layers} layers.")
+#    if amount > 0:  # Only apply pruning if amount is greater than 0
+#        if layers == "initial":
+#            for name, module in list(model.model.named_modules())[:32]:  # Ajusta a las capas iniciales
+#                if isinstance(module, nn.Conv2d):
+#                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+#                    print(f"Pruned {name} with {amount * 100}% of weights removed.")
+#        elif layers == "final":
+#            for name, module in list(model.model.named_modules())[-32:]:  # Ajusta a las capas finales
+#                if isinstance(module, nn.Conv2d):
+#                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+#                    print(f"Pruned {name} with {amount * 100}% of weights removed.")
+#        for name, module in model.model.named_modules():
+#            if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+#                prune.remove(module, 'weight')
+
+
 def apply_pruning(model, amount, layers):
     print(f"Applying pruning with amount={amount} on {layers} layers.")
-    if amount > 0:  # Only apply pruning if amount is greater than 0
+    if amount > 0:
         if layers == "initial":
-            for name, module in list(model.model.named_modules())[:32]:  # Ajusta a las capas iniciales
-                if isinstance(module, nn.Conv2d):
+            for name, module in list(model.model.named_modules())[:32]:  # Ajusta el rango según el modelo
+                if isinstance(module, (nn.Conv2d, nn.Linear)):  # Agrega Linear para ViT si es necesario
                     prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
                     print(f"Pruned {name} with {amount * 100}% of weights removed.")
         elif layers == "final":
-            for name, module in list(model.model.named_modules())[-32:]:  # Ajusta a las capas finales
-                if isinstance(module, nn.Conv2d):
+            for name, module in list(model.model.named_modules())[-32:]:  # Ajusta el rango según el modelo
+                if isinstance(module, (nn.Conv2d, nn.Linear)):
                     prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
                     print(f"Pruned {name} with {amount * 100}% of weights removed.")
         for name, module in model.model.named_modules():
-            if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+            if isinstance(module, (nn.Conv2d, nn.Linear)) and hasattr(module, 'weight_orig'):
                 prune.remove(module, 'weight')
+
+
+#def apply_pruning(model, amount, layers):
+#    print(f"Applying pruning with amount={amount} on {layers} layers.")
+#    module_to_prune = model  # En este caso, asumimos que `model` es `BasicCNN` directamente
+#
+#    # Imprimir todos los módulos para visualizar la arquitectura y decidir el número de capas a podar
+#    print("\n--- Listado de Capas en BasicCNN ---")
+#    for idx, (name, module) in enumerate(module_to_prune.named_modules()):
+#        print(f"{idx}: {name} - {module}")
+#    print("--- Fin del Listado de Capas ---\n")
+#
+#    # Ahora aplicamos la poda
+#    if amount > 0:
+#        if layers == "initial":
+#            # Podar las primeras N capas convolucionales, ajusta el número según el listado impreso
+#            for idx, (name, module) in enumerate(list(module_to_prune.named_modules())[:4]):  # Ajusta el número aquí
+#                if isinstance(module, nn.Conv2d):
+#                    prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+#                    print(f"Pruned initial layer {name} ({idx}) with {amount * 100}% of weights removed.")
+#        
+#        elif layers == "final":
+#            # Podar las últimas N capas convolucionales, ajusta el número según el listado impreso
+#            for idx, (name, module) in enumerate(list(module_to_prune.named_modules())[-4:]):  # Ajusta el número aquí
+#                if isinstance(module, nn.Conv2d):
+#                    #prune.ln_structured(module, name='weight', amount=amount, n=1, dim=0)
+#                    prune.random_unstructured(module, name='weight', amount=amount)
+#                    print(f"Pruned final layer {name} ({idx}) with {amount * 100}% of weights removed.")
+#        
+#        # Remover los pesos originales de los módulos podados
+#        for name, module in module_to_prune.named_modules():
+#            if isinstance(module, nn.Conv2d) and hasattr(module, 'weight_orig'):
+#                prune.remove(module, 'weight')
+
 
 if __name__ == "__main__":
     args = setup_arguments(print_args=True, save_args=True)

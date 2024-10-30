@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configuración común
-CONFIG_PATH="configs/resnet50.json"
-CKPT_PATH="experiments/resnet50/resnet50_0%/last.ckpt"
+CONFIG_PATH="configs/vit.json" #"configs/basic_cnn.json"  #"configs/resnet50.json"
+CKPT_PATH="experiments/vit/vit_test3/last.ckpt" #"experiments/BasicCNN/cnn_test5/last.ckpt"  #"experiments/resnet50/resnet50_0%/last.ckpt"
 PROJECT="Exposicion_1_proyecto"
 
 # Verifica si el checkpoint existe
@@ -21,7 +21,7 @@ for layer in "${layers[@]}"; do
     # Calcula el porcentaje sin espacios ni decimales
     percent=$(printf "%.0f" $(echo "$amount * 100" | bc -l 2>/dev/null || echo "$amount * 100"))
 
-    experiment_name="resnet50_${percent}%_${layer}"
+    experiment_name="cnn_${percent}%_${layer}"
     echo "Running experiment: $experiment_name with pruning_amount $amount on $layer layers"
 
     python3 test_pruning.py \
