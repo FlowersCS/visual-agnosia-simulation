@@ -375,3 +375,8 @@ clear
 clear
 ./run_test.sh 
 python3 test_pruning.py --config_path configs/vit.json --pruning_amount 0.0 --layers_to_prune "final" --experiment_name vittest5wa --ckpt_path experiments/vit/vit_test3/last.ckpt --project Exposicion_1_proyecto
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune "initial" --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt --experiment_name resnet50_poda_aleatoria
+python3 test_pruning.py --config_path configs/resnet50.json --pruning_amount 0.0 --layers_to_prune "initial" --ckpt_path experiments/resnet50/resnet50_0%/last.ckpt --experiment_name resnet50_poda_aleatoria
+./run_test.sh 
+clear
+./run_test.sh 

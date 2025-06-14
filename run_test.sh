@@ -1,24 +1,22 @@
 #!/bin/bash
 
-# Configuración común
-CONFIG_PATH="configs/vit.json" #"configs/basic_cnn.json"  #"configs/resnet50.json"
-CKPT_PATH="experiments/vit/vit_test3/last.ckpt" #"experiments/BasicCNN/cnn_test5/last.ckpt"  #"experiments/resnet50/resnet50_0%/last.ckpt"
+# configuration
+CONFIG_PATH="configs/resnet50.json" # | "configs/vit.json"
+CKPT_PATH="experiments/resnet50/resnet50_0%/last.ckpt" # | "experiments/vit/vit_test3/last.ckpt"
 PROJECT="Exposicion_1_proyecto"
 
-# Verifica si el checkpoint existe
+# ckpt_path exist?
 if [ ! -f "$CKPT_PATH" ]; then
   echo "Error: No se encontró el checkpoint en $CKPT_PATH"
   exit 1
 fi
 
-# Definir porcentajes y tipos de capas
+# layers && %weight diminution
 pruning_amounts=(0.2 0.3 0.5 0.7)
 layers=("initial" "final")
 
-# Ejecutar los experimentos
 for layer in "${layers[@]}"; do
   for amount in "${pruning_amounts[@]}"; do
-    # Calcula el porcentaje sin espacios ni decimales
     percent=$(printf "%.0f" $(echo "$amount * 100" | bc -l 2>/dev/null || echo "$amount * 100"))
 
     experiment_name="cnn_${percent}%_${layer}"

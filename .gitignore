@@ -16,9 +16,12 @@ venv/
 .lightning_studio/
 .netrc
 lightning_logs/
+dataset/*.zip
 dataset/
-*.zip
-
 # Ignote folders
-dataset/pictograms
 experiments/
+
+.bash_history
+.cursor-server
+.vscode-server
+.windsurf-server
